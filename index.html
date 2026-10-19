@@ -1,0 +1,623 @@
+index.html<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CYBER TERMINAL // 个人终端</title>
+<style>
+  :root{
+    --cyan:#00f7ff;
+    --magenta:#ff2a6d;
+    --purple:#d300c5;
+    --blue:#05d9e8;
+    --bg:#07070d;
+    --card:rgba(12,14,28,0.82);
+    --text:#d6e4ff;
+    --danger:#ff5555;
+    --success:#39ff14;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    font-family: "Consolas", "Microsoft YaHei", monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+  /* ==========新增：赛博城市背景图  ========== */
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:0;
+    background-image:
+      linear-gradient(180deg, rgba(7,7,13,0.55), rgba(7,7,13,0.85)),
+      url("https://images.unsplash.com/photo-1545235617-9465d2a55698?auto=format&fit=crop&w=1920&q=80");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    pointer-events:none;
+    animation:bgShift 20s ease-in-out infinite alternate;
+  }
+  @keyframes bgShift{
+    0%{background-position:center top}
+    100%{background-position:center bottom}
+  }
+
+  /* 动态网格背景 */
+  .grid-bg{
+    position:fixed;inset:0;z-index:0;
+    background-image:
+      linear-gradient(rgba(0,247,255,0.08) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,247,255,0.08) 1px,transparent 1px);
+    background-size:40px 40px;
+    animation:gridMove 6s linear infinite;
+    pointer-events:none;
+  }
+
+  @keyframes gridMove{
+    0%{background-position:0 0,0 0}
+    100%{background-position:40px 40px,40px 40px}
+  }
+
+  /* 扫描线 */
+  .scanline{
+    position:fixed;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,rgba(0,247,255,0.6),transparent);
+    animation:scan 3s linear infinite;
+    z-index:2;pointer-events:none;
+  }
+  @keyframes scan{
+    0%{top:0}100%{top:100vh}
+  }
+
+  /* 故障噪点 */
+  .noise{
+    position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.04;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .container{
+    max-width:860px;margin:0 auto;padding:40px 24px;position:relative;z-index:3;
+  }
+
+  /* 霓虹标题 + 呼吸光 */
+  h1.glitch{
+    font-size:2.6rem;letter-spacing:0.25em;color:var(--cyan);
+    text-shadow:
+      0 0 8px var(--cyan),
+      0 0 20px rgba(0,247,255,0.6),
+      0 0 40px rgba(0,247,255,0.4);
+    position:relative;
+    animation:breath 3s ease-in-out infinite alternate;
+  }
+  @keyframes breath{
+    from{text-shadow:0 0 8px var(--cyan),0 0 20px rgba(0,247,255,0.6),0 0 40px rgba(0,247,255,0.4)}
+    to{text-shadow:0 0 16px var(--cyan),0 0 30px rgba(0,247,255,0.9),0 0 60px rgba(0,247,255,0.6)}
+  }
+  h1.glitch::before,
+  h1.glitch::after{
+    content:attr(data-text);position:absolute;left:0;top:0;width:100%;height:100%;
+  }
+  h1.glitch::before{
+    color:var(--magenta);
+    animation:glitch1 2.4s infinite linear alternate-reverse;
+    clip-path:inset(20% 0 60% 0);
+  }
+  h1.glitch::after{
+    color:var(--blue);
+    animation:glitch2 3.1s infinite linear alternate-reverse;
+    clip-path:inset(60% 0 20% 0);
+  }
+  @keyframes glitch1{
+    0%{transform:translate(-3px,0)}20%{transform:translate(3px,-2px)}40%{transform:translate(-2px,2px)}60%{transform:translate(2px,0)}80%{transform:translate(-1px,-1px)}100%{transform:translate(1px,2px)}
+  }
+  @keyframes glitch2{
+    0%{transform:translate(3px,0)}20%{transform:translate(-3px,2px)}40%{transform:translate(2px,-2px)}60%{transform:translate(-2px,1px)}80%{transform:translate(1px,1px)}100%{transform:translate(-1px,-2px)}
+  }
+
+  .subtitle{
+    color:var(--magenta);margin-top:10px;letter-spacing:0.12em;
+    text-shadow:0 0 6px rgba(255,42,109,0.6);
+    animation:flicker 4s infinite;
+  }
+  @keyframes flicker{
+    0%,100%{opacity:1}
+    45%{opacity:1}
+    50%{opacity:0.4}
+    55%{opacity:1}
+  }
+
+  /* 实时时钟 */
+  .clock{
+    position:absolute;top:40px;right:24px;color:var(--cyan);
+    text-shadow:0 0 8px var(--cyan);font-size:1.1rem;
+    border:1px solid rgba(0,247,255,0.4);padding:8px 14px;
+    background:rgba(0,247,255,0.08);
+    animation:clockBorder 4s linear infinite;
+  }
+  @keyframes clockBorder{
+    0%{box-shadow:0 0 8px rgba(0,247,255,0.5)}
+    50%{box-shadow:0 0 18px rgba(255,42,109,0.7)}
+    100%{box-shadow:0 0 8px rgba(0,247,255,0.5)}
+  }
+
+  /* 导航 */
+  nav{
+    margin:30px 0;display:flex;flex-wrap:wrap;gap:10px;
+  }
+  nav a{
+    display:inline-block;padding:8px 14px;color:var(--cyan);
+    text-decoration:none;letter-spacing:0.1em;font-size:0.9rem;
+    border:1px solid var(--cyan);background:rgba(0,247,255,0.06);
+    box-shadow:0 0 8px rgba(0,247,255,0.3),inset 0 0 8px rgba(0,247,255,0.1);
+    transition:.3s;position:relative;overflow:hidden;
+  }
+  nav a::before{
+    content:"";position:absolute;left:-100%;top:0;width:100%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(0,247,255,0.25),transparent);
+    transition:.5s;
+  }
+  nav a:hover::before{left:100%}
+  nav a:hover{
+    color:var(--magenta);border-color:var(--magenta);
+    box-shadow:0 0 12px var(--magenta),inset 0 0 12px rgba(255,42,109,0.2);
+  }
+
+  /* 赛博卡片 + 悬浮扫描 */
+  .card{
+    background:var(--card);
+    border:1px solid rgba(0,247,255,0.35);
+    padding:22px;margin:20px 0;position:relative;
+    box-shadow:
+      0 0 12px rgba(0,247,255,0.25),
+      inset 0 0 24px rgba(0,247,255,0.05);
+    clip-path:polygon(
+      0 12px,12px 0,
+      calc(100% - 24px) 0,100% 24px,
+      100% calc(100% - 12px),calc(100% - 12px) 100%,
+      24px 100%,0 calc(100% - 24px)
+    );
+    transition:.4s;
+    overflow:hidden;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0;border:1px solid rgba(255,42,109,0.25);
+    clip-path:polygon(
+      0 20px,20px 0,
+      calc(100% - 30px) 0,100% 30px,
+      100% calc(100% - 20px),calc(100% - 20px) 100%,
+      30px 100%,0 calc(100% - 30px)
+    );
+    pointer-events:none;
+  }
+  .card::after{
+    content:"";
+    position:absolute;left:0;top:-60%;
+    width:100%;height:60%;
+    background:linear-gradient(180deg,transparent,rgba(0,247,255,0.12),transparent);
+    transform:translateY(0);
+    opacity:0;
+    pointer-events:none;
+  }
+  .card:hover{
+    transform:translateY(-6px);
+    border-color:rgba(255,42,109,0.6);
+    box-shadow:
+      0 0 22px rgba(255,42,109,0.55),
+      inset 0 0 30px rgba(255,42,109,0.08);
+  }
+  .card:hover::after{
+    animation:cardScan 2.2s linear infinite;
+    opacity:1;
+  }
+  @keyframes cardScan{
+    0%{transform:translateY(0)}
+    100%{transform:translateY(260%)}
+  }
+
+  h2{
+    color:var(--cyan);margin-bottom:16px;letter-spacing:0.18em;
+    text-shadow:0 0 8px var(--cyan);
+    display:flex;align-items:center;gap:10px;
+  }
+  h2::before{
+    content:"▶";color:var(--magenta);
+    animation:blink 1s infinite;
+  }
+  @keyframes blink{50%{opacity:0.2}}
+
+  h3{
+    color:var(--blue);margin:14px 0 8px;
+    text-shadow:0 0 6px rgba(5,217,232,0.5);
+  }
+
+  p,li{line-height:1.8;font-size:0.95rem}
+
+  /* 标签 */
+  .tag-row{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+  .tag{
+    padding:4px 10px;font-size:0.85rem;letter-spacing:0.1em;
+    color:var(--magenta);border:1px solid var(--magenta);
+    background:rgba(255,42,109,0.08);
+    box-shadow:0 0 6px rgba(255,42,109,0.35);
+    animation:tagPulse 3s ease-in-out infinite;
+  }
+  .tag:nth-child(2){animation-delay:.4s}
+  .tag:nth-child(3){animation-delay:.8s}
+  .tag:nth-child(4){animation-delay:1.2s}
+  @keyframes tagPulse{
+    0%,100%{box-shadow:0 0 6px rgba(255,42,109,0.35)}
+    50%{box-shadow:0 0 14px rgba(0,247,255,0.7)}
+  }
+
+  /* 状态条 */
+  .stat-row{display:flex;flex-wrap:wrap;gap:16px;margin:18px 0}
+  .stat-item{
+    flex:1;min-width:140px;padding:14px;
+    border:1px solid rgba(0,247,255,0.4);
+    background:linear-gradient(135deg,rgba(0,247,255,0.08),rgba(211,0,197,0.08));
+    transition:.3s;
+  }
+  .stat-item:hover{
+    transform:translateY(-4px);
+    border-color:var(--magenta);
+    box-shadow:0 0 16px rgba(255,42,109,0.5);
+  }
+  .stat-item strong{
+    display:block;font-size:1.7rem;color:var(--cyan);
+    text-shadow:0 0 10px var(--cyan);
+  }
+
+  /* 分隔线 */
+  .divider{
+    margin:40px 0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent);
+    box-shadow:0 0 10px var(--cyan);
+    animation:dividerGlow 3s ease-in-out infinite alternate;
+  }
+  @keyframes dividerGlow{
+    from{box-shadow:0 0 10px var(--cyan)}
+    to{box-shadow:0 0 22px var(--magenta)}
+  }
+
+  /* 终端输入区 */
+  .terminal{
+    background:rgba(0,0,0,0.55);
+    border:1px solid var(--cyan);
+    padding:16px;margin-top:14px;
+    box-shadow:inset 0 0 16px rgba(0,247,255,0.15);
+    position:relative;
+  }
+  .terminal::before{
+    content:"终端在线";
+    position:absolute;top:-10px;right:12px;
+    font-size:0.75rem;color:var(--success);
+    background:var(--bg);padding:0 8px;
+    text-shadow:0 0 6px var(--success);
+    animation:blink 1s infinite;
+  }
+  .terminal-line{display:flex;gap:8px;margin-bottom:10px}
+  .terminal-prompt{color:var(--success)}
+  .terminal-input{
+    background:transparent;border:none;outline:none;color:var(--cyan);
+    flex:1;font-family:inherit;font-size:1rem;
+  }
+  .terminal-output{color:var(--blue);white-space:pre-wrap}
+
+  /* 猜数字 */
+  .game-area{margin-top:16px}
+  input[type="number"]{
+    background:#0a0a14;border:1px solid var(--cyan);color:var(--cyan);
+    padding:8px 12px;outline:none;font-family:inherit;width:160px;
+    box-shadow:0 0 8px rgba(0,247,255,0.3);
+    transition:.3s;
+  }
+  input[type="number"]:focus{
+    border-color:var(--magenta);
+    box-shadow:0 0 14px rgba(255,42,109,0.6);
+  }
+  button{
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    color:#04040a;border:none;padding:8px 16px;cursor:pointer;
+    font-family:inherit;font-weight:bold;letter-spacing:0.1em;
+    box-shadow:0 0 10px rgba(0,247,255,0.5);
+    transition:.3s;
+    position:relative;overflow:hidden;
+  }
+  button::before{
+    content:"";position:absolute;left:-120%;top:0;
+    width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,0.55),transparent);
+    transform:skewX(-20deg);
+    transition:.6s;
+  }
+  button:hover::before{left:120%}
+  button:hover{
+    background:linear-gradient(135deg,var(--magenta),var(--purple));
+    box-shadow:0 0 14px rgba(255,42,109,0.6);
+    transform:translateY(-2px);
+  }
+  button.secondary{
+    background:transparent;color:var(--magenta);
+    border:1px solid var(--magenta);
+  }
+
+  .tip{
+    margin-top:12px;padding:12px;
+    border-left:3px solid var(--cyan);
+    background:rgba(0,247,255,0.06);
+    color:var(--cyan);
+    transition:.4s;
+  }
+  .tip.pop{
+    animation:pop .4s ease;
+  }
+  @keyframes pop{
+    0%{transform:scale(1)}
+    40%{transform:scale(1.04);border-left-color:var(--magenta)}
+    100%{transform:scale(1)}
+  }
+
+  /* 进度条 */
+  .bar{
+    height:10px;background:rgba(255,255,255,0.08);
+    border:1px solid rgba(0,247,255,0.3);margin-top:8px;overflow:hidden;
+  }
+  .bar>span{
+    display:block;height:100%;
+    background:linear-gradient(90deg,var(--cyan),var(--magenta));
+    box-shadow:0 0 10px var(--cyan);
+    animation:barMove 2s infinite;
+  }
+  @keyframes barMove{
+    0%{width:0}100%{width:var(--w,70%)}
+  }
+
+  /* 打字光标 */
+  .cursor::after{
+    content:"▊";color:var(--cyan);
+    animation:cursor 1s infinite;
+  }
+  @keyframes cursor{50%{opacity:0}}
+
+  footer{
+    text-align:center;margin-top:50px;padding-top:20px;
+    border-top:1px solid rgba(0,247,255,0.2);
+    color:rgba(214,228,255,0.5);font-size:0.85rem;
+    animation:flicker 5s infinite;
+  }
+
+  a{color:var(--cyan)}
+  a:hover{color:var(--magenta)}
+
+  ul{padding-left:20px}
+
+  @media (max-width:600px){
+    h1.glitch{font-size:1.6rem}
+    .clock{position:static;margin-bottom:20px}
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+<div class="noise"></div>
+
+<div class="container">
+
+  <div class="clock" id="clock">00:00:00</div>
+
+  <header>
+    <h1 class="glitch" data-text="CYBER TERMINAL">CYBER TERMINAL</h1>
+    <p class="subtitle">// PERSONAL PROFILE v2.6 // NEURAL LINK ONLINE</p>
+  </header>
+
+  <nav>
+    <a href="#me">用户档案</a>
+    <a href="#skill">技能矩阵</a>
+    <a href="#project">项目日志</a>
+    <a href="#game">入侵游戏</a>
+    <a href="#contact">通讯端口</a>
+  </nav>
+
+  <div class="divider"></div>
+
+  <!-- 用户档案 -->
+  <section id="me" class="card">
+    <h2>用户档案</h2>
+    <p>身份：马光绪/通信大一 / 代码初学者 / 小说爱好者</p>
+    <p>当前位置：沈阳理工 · 夜间调试模式</p>
+    <p>状态：<span class="cursor">在线</span>｜CPU负载 37%｜内存占用 42%｜神经连接稳定</p>
+
+    <div class="tag-row">
+      <span class="tag">C语言</span>
+      <span class="tag">C++</span>
+      <span class="tag">算法</span>
+      <span class="tag">电路理论</span>
+      <span class="tag">游戏开发</span>
+      <span class="tag">赛博朋克</span>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-item"><strong>18</strong>年龄 / 岁</div>
+      <div class="stat-item"><strong>3</strong>主攻方向</div>
+      <div class="stat-item"><strong>∞</strong>好奇心</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 技能矩阵 -->
+  <section id="skill" class="card">
+    <h2>技能矩阵</h2>
+
+    <h3>C语言</h3>
+    <p>变量、循环、数组、函数、指针基础。正在把课后题写成可运行程序。</p>
+    <div class="bar"><span style="--w:60%"></span></div>
+
+    <h3>C++</h3>
+    <p>cin / cout / string / vector 入门，后续推进 STL 与面向对象。</p>
+    <div class="bar"><span style="--w:40%"></span></div>
+
+    <h3>算法</h3>
+    <p>模拟、枚举、排序、二分、前缀和。目标是建立稳定解题思路。</p>
+    <div class="bar"><span style="--w:35%"></span></div>
+
+    <h3>电路设计</h3>
+    <p>Altium Designer基础，原理图绘制、PCB布局、简单元器件封装。</p>
+    <div class="bar"><span style="--w:20%"></span></div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 项目日志 -->
+  <section id="project" class="card">
+    <h2>项目日志</h2>
+
+    <h3>// 01 赛博个人终端</h3>
+    <p>搭建 GitHub Pages 静态主页，加入霓虹、故障、扫描线与终端交互。目标不是普通网页，而是一块可长期更新的数字身份面板。</p>
+
+    <h3>// 02 猜数字入侵程序</h3>
+    <p>在终端中猜测系统生成的随机数。每一次输入都会得到大了 / 小了反馈，并记录尝试次数。</p>
+
+    <h3>// 03 设计电路</h3>
+    <p>目标：可以独立绘制简易单片机外围电路板。</p>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 小游戏：猜数字升级 -->
+  <section id="game" class="card">
+    <h2>小游戏模块｜猜数字入侵</h2>
+    <p>系统已在 1–100 区间内生成秘密数字。输入你的猜测，终端将返回：</p>
+    <ul>
+      <li><span style="color:var(--cyan)">↑ 太大了</span></li>
+      <li><span style="color:var(--magenta)">↓ 太小了</span></li>
+      <li><span style="color:var(--success)">✔ 入侵成功</span></li>
+    </ul>
+
+    <div class="game-area">
+      <input id="guessInput" type="number" min="1" max="100" placeholder="输入 1-100" />
+      <button onclick="checkGuess()">提交猜测</button>
+      <button class="secondary" onclick="resetGame()">重置入侵</button>
+    </div>
+
+    <div class="tip" id="gameTip">系统就绪，等待输入...</div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 终端指令 -->
+  <section class="card">
+    <h2>终端指令</h2>
+    <p>输入指令与终端交互，支持：<code>help</code>、<code>status</code>、<code>contact</code>、<code>clear</code></p>
+
+    <div class="terminal">
+      <div class="terminal-line">
+        <span class="terminal-prompt">root@cyber:~$</span>
+        <input class="terminal-input" id="cmdInput" placeholder="输入 help 查看指令" />
+      </div>
+      <div class="terminal-output" id="terminalOutput">等待指令...</div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 通讯端口 -->
+  <section id="contact" class="card">
+    <h2>通讯端口</h2>
+    <p>欢迎同校同学、刷题伙伴、游戏好友与独立游戏开发者连接。</p>
+    <div class="tag-row">
+      <span class="tag">QQ：1725502329</span>
+      <span class="tag">微信：b1725502329</span>
+      <span class="tag">邮箱：1725502329@qq.com</span>
+      <span class="tag">Steam：1058473434</span>
+    </div>
+  </section>
+
+  <footer>
+    CYBER TERMINAL // 2026 // GITHUB PAGES // NEURAL LINK ACTIVE
+  </footer>
+
+</div>
+
+<script>
+  // 实时时钟
+  function updateClock(){
+    const d = new Date();
+    const p = n => String(n).padStart(2,"0");
+    document.getElementById("clock").innerText =
+      `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+  setInterval(updateClock,1000);updateClock();
+
+  // 猜数字
+  let answer = Math.floor(Math.random()*100)+1;
+  let count = 0;
+  const tip = document.getElementById("gameTip");
+
+  function checkGuess(){
+    const val = Number(document.getElementById("guessInput").value);
+    if(isNaN(val)||val<1||val>100){
+      tip.innerHTML = "⚠ 非法输入！请输入 1-100 的整数。";
+      tip.style.borderColor = "var(--danger)";
+      tip.classList.remove("pop");
+      void tip.offsetWidth;
+      tip.classList.add("pop");
+      return;
+    }
+    count++;
+    if(val>answer){
+      tip.innerHTML = `↑ ${val} 太大了｜当前次数：${count}`;
+      tip.style.borderColor = "var(--cyan)";
+    }else if(val<answer){
+      tip.innerHTML = `↓ ${val} 太小了｜当前次数：${count}`;
+      tip.style.borderColor = "var(--magenta)";
+    }else{
+      tip.innerHTML = `✔ 入侵成功！答案是 ${answer}，共用 ${count} 次完成入侵。`;
+      tip.style.borderColor = "var(--success)";
+    }
+
+    tip.classList.remove("pop");
+    void tip.offsetWidth;
+    tip.classList.add("pop");
+  }
+
+  function resetGame(){
+    answer = Math.floor(Math.random()*100)+1;
+    count = 0;
+    document.getElementById("guessInput").value = "";
+    tip.innerHTML = "系统已重置，等待新的输入...";
+    tip.style.borderColor = "var(--cyan)";
+  }
+
+  // 终端指令
+  const cmdInput = document.getElementById("cmdInput");
+  const terminalOutput = document.getElementById("terminalOutput");
+  const cmdMap = {
+    help: "支持指令：help, status, contact, clear",
+    status: "用户在线｜终端运行正常｜神经连接稳定",
+    contact: "QQ: 1725502329｜微信: b1725502329｜邮箱: 1725502329@qq.com",
+    clear: ""
+  };
+
+  cmdInput.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){
+      const cmd = cmdInput.value.trim().toLowerCase();
+      if(cmd==="clear"){
+        terminalOutput.innerText = "";
+      }else if(cmdMap[cmd]!==undefined){
+        terminalOutput.innerText = cmdMap[cmd];
+      }else{
+        terminalOutput.innerText = `未知指令：${cmd}`;
+      }
+      cmdInput.value = "";
+    }
+  });
+</script>
+
+</body>
+</html>
